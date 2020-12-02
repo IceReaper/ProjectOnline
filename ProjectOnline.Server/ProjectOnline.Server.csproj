@@ -7,6 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\ProjectOnline.Shared\ProjectOnline.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Content Include="Assets\**\*.*" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
