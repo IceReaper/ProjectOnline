@@ -36,7 +36,7 @@ namespace ProjectOnline.Shared.Networking
 					while (peer.ConnectionState != ConnectionState.Disconnected)
 					{
 						this.client.PollEvents();
-						Thread.Sleep(NetworkSettings.PollTimeout);
+						Thread.Sleep(25);
 					}
 
 					this.client.Stop();

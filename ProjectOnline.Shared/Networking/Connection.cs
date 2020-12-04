@@ -5,6 +5,7 @@ namespace ProjectOnline.Shared.Networking
 	using System.Collections.Generic;
 	using System.IO;
 	using System.IO.Compression;
+	using System.Text;
 	using Utils;
 
 	public class Connection : IDisposable
@@ -14,6 +15,8 @@ namespace ProjectOnline.Shared.Networking
 
 		public readonly List<object> Properties = new();
 
+		public byte[] EncryptionKey = Encoding.UTF8.GetBytes(NetworkSettings.HandshakeKey);
+
 		public bool IsConnecting => this.peer.ConnectionState == ConnectionState.Outgoing;
 		public bool IsConnected => this.peer.ConnectionState != ConnectionState.Disconnected;
 
@@ -22,23 +25,26 @@ namespace ProjectOnline.Shared.Networking
 			this.peer = peer;
 		}
 
-		// TODO i dont like this being public!
 		public void Receive(byte[] data)
 		{
-			var reader = new BinaryReader(
-				new GZipStream(new EncryptedStream(new MemoryStream(data), NetworkSettings.EncryptionKey), CompressionMode.Decompress)
-			);
+			try
+			{
+				var reader = new BinaryReader(new GZipStream(new EncryptedStream(new MemoryStream(data), this.EncryptionKey), CompressionMode.Decompress));
+				var packet = (IPacket?) Activator.CreateInstance(NetworkSettings.Packets[reader.ReadUInt16()]);
 
-			var packet = (IPacket?) Activator.CreateInstance(NetworkSettings.Packets[reader.ReadUInt16()]);
+				if (packet == null)
+					return;
 
-			if (packet == null)
-				return;
-
-			packet.Read(reader);
-			this.packets.Add(packet);
+				packet.Read(reader);
+				this.packets.Add(packet);
+			}
+			catch (Exception)
+			{
+				// ignored
+			}
 		}
 
-		public IPacket Receive()
+		public IPacket? Receive()
 		{
 			if (this.packets.Count == 0)
 				return null;
@@ -61,7 +67,7 @@ namespace ProjectOnline.Shared.Networking
 			compression.Flush();
 
 			var encrypted = new MemoryStream();
-			new EncryptedStream(encrypted, NetworkSettings.EncryptionKey).Write(stream.ToArray());
+			new EncryptedStream(encrypted, this.EncryptionKey).Write(stream.ToArray());
 			this.peer.Send(encrypted.ToArray(), DeliveryMethod.ReliableOrdered);
 		}
 

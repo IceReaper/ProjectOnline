@@ -4,26 +4,26 @@ namespace ProjectOnline.Shared.Utils
 
 	public class EncryptedStream : Stream
 	{
-		private readonly Stream BaseStream;
+		private readonly Stream baseStream;
 
 		private readonly byte[] key;
 		private readonly byte[] keyNum0;
 
-		public override bool CanRead => this.BaseStream.CanRead;
-		public override bool CanSeek => this.BaseStream.CanSeek;
-		public override bool CanWrite => this.BaseStream.CanWrite;
-		public override long Length => this.BaseStream.Length;
+		public override bool CanRead => this.baseStream.CanRead;
+		public override bool CanSeek => this.baseStream.CanSeek;
+		public override bool CanWrite => this.baseStream.CanWrite;
+		public override long Length => this.baseStream.Length;
 
 		public override long Position
 		{
-			get => this.BaseStream.Position;
-			set => this.BaseStream.Position = value;
+			get => this.baseStream.Position;
+			set => this.baseStream.Position = value;
 		}
 
 		public EncryptedStream(Stream baseStream, byte[] key)
 		{
 			this.key = key;
-			this.BaseStream = baseStream;
+			this.baseStream = baseStream;
 
 			this.keyNum0 = new byte[this.key.Length];
 
@@ -35,23 +35,23 @@ namespace ProjectOnline.Shared.Utils
 
 		public override long Seek(long offset, SeekOrigin origin)
 		{
-			return this.BaseStream.Seek(offset, origin);
+			return this.baseStream.Seek(offset, origin);
 		}
 
 		public override void SetLength(long value)
 		{
-			this.BaseStream.SetLength(value);
+			this.baseStream.SetLength(value);
 		}
 
 		public override void Flush()
 		{
-			this.BaseStream.Flush();
+			this.baseStream.Flush();
 		}
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
 			var startOffset = this.Position;
-			var result = this.BaseStream.Read(buffer, offset, count);
+			var result = this.baseStream.Read(buffer, offset, count);
 
 			for (var i = 0; i < result; i++)
 				buffer[offset + i] = this.Decrypt(buffer[offset + i], startOffset + i);
@@ -67,7 +67,7 @@ namespace ProjectOnline.Shared.Utils
 			for (var i = 0; i < count; i++)
 				encrypted[i] = this.Encrypt(buffer[offset + i], startOffset + i);
 
-			this.BaseStream.Write(encrypted);
+			this.baseStream.Write(encrypted);
 		}
 
 		private byte Encrypt(byte decrypted, long keyOffset)

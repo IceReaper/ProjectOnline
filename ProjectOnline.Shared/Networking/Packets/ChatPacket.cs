@@ -4,7 +4,7 @@ namespace ProjectOnline.Shared.Networking.Packets
 
 	public class ChatPacket : IPacket
 	{
-		public string Message = "";
+		public string Message = null!;
 
 		public void Read(BinaryReader reader)
 		{

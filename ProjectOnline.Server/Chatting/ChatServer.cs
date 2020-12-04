@@ -18,23 +18,28 @@ namespace ProjectOnline.Server.Chatting
 			this.connections.Add(newConnection);
 
 			foreach (var connection in this.connections)
-				connection.Send(new ChatPacket {Message = $"Client {newConnection.Properties.OfType<Account>().First().Username} connected."});
+				connection.Send(new ChatPacket {Message = $"Client {newConnection.Properties.OfType<Session>().First().Account.Username} connected."});
 		}
 
 		protected override void Update()
 		{
 			foreach (var sender in this.connections.ToArray())
 			{
-				IPacket packet;
+				IPacket? packet;
 
 				while ((packet = sender.Receive()) != null)
 				{
-					if (packet is ChatPacket chatPacket)
+					switch (packet)
 					{
-						var response = new ChatPacket {Message = $"{sender.Properties.OfType<Account>().First().Username}: {chatPacket.Message}"};
+						case ChatPacket chatPacket:
+						{
+							var response = new ChatPacket {Message = $"{sender.Properties.OfType<Session>().First().Account.Username}: {chatPacket.Message}"};
 
-						foreach (var receiver in this.connections)
-							receiver.Send(response);
+							foreach (var receiver in this.connections)
+								receiver.Send(response);
+
+							break;
+						}
 					}
 				}
 
@@ -45,7 +50,7 @@ namespace ProjectOnline.Server.Chatting
 				this.connections.Remove(sender);
 
 				foreach (var receiver in this.connections)
-					receiver.Send(new ChatPacket {Message = $"Client {sender.Properties.OfType<Account>().First().Username} disconnected."});
+					receiver.Send(new ChatPacket {Message = $"Client {sender.Properties.OfType<Session>().First().Account.Username} disconnected."});
 			}
 		}
 	}

@@ -1,16 +1,21 @@
 namespace ProjectOnline.Shared.Networking
 {
-	using Packets;
 	using System;
-	using System.Text;
+	using System.Linq;
 
 	public static class NetworkSettings
 	{
 		public const string HandshakeKey = "ProjectOnline";
 		public const short Port = 9001;
-		public const short PollTimeout = 100;
 
-		public static readonly byte[] EncryptionKey = Encoding.UTF8.GetBytes("ProjectOnline");
-		public static readonly Type[] Packets = {typeof(ChatPacket)};
+		public static readonly Type[] Packets;
+
+		static NetworkSettings()
+		{
+			NetworkSettings.Packets = typeof(IPacket).Assembly.GetTypes()
+				.Where(type => typeof(IPacket).IsAssignableFrom(type) && type.IsClass)
+				.OrderBy(type => type.FullName)
+				.ToArray();
+		}
 	}
 }
