@@ -1,7 +1,7 @@
 namespace ProjectOnline.Client
 {
 	using Microsoft.Xna.Framework;
-	using Networking;
+	using Shared.Networking;
 	using Shared.Networking.Packets;
 	using System;
 	using System.Threading;
@@ -24,17 +24,24 @@ namespace ProjectOnline.Client
 				Thread.Sleep(15);
 
 			var line = "";
+			
+			
+			if (connection.IsConnected)
+			{
+				var username = Console.ReadLine()!.Trim();
+				var password = username;
+			}
 
 			while (connection.IsConnected)
 			{
 				Thread.Sleep(15);
 
-				foreach (var packet in connection.Receive())
-				{
-					if (packet is not ChatPacket chatPacket)
-						continue;
+				IPacket packet;
 
-					Console.WriteLine($"ChatPacket: {chatPacket.Message}");
+				while ((packet = connection.Receive()) != null)
+				{
+					if (packet is ChatPacket chatPacket)
+						Console.WriteLine(chatPacket.Message);
 				}
 
 				if (!Console.KeyAvailable)

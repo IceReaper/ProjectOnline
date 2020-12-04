@@ -1,9 +1,9 @@
 namespace ProjectOnline.Server
 {
-	using Networking;
-	using Shared.Networking.Packets;
+	using Authentication;
+	using Chatting;
+	using Shared.Networking;
 	using System;
-	using System.Threading;
 
 	public class Application : IDisposable
 	{
@@ -11,33 +11,23 @@ namespace ProjectOnline.Server
 
 		public void Run()
 		{
+			var chatServer = new ChatServer();
+			chatServer.Start();
+
+			var authenticationServer = new AuthenticationServer(chatServer);
+			authenticationServer.Start();
+
+			var server = new NetworkServer(authenticationServer);
+			server.Start();
+
 			while (!this.isDisposed)
 			{
-				var server = new NetworkServer();
-				server.Start();
-
-				while (!Console.KeyAvailable)
-				{
-					foreach (var sender in server.Connections)
-					{
-						foreach (var packet in sender.Receive())
-						{
-							if (packet is not ChatPacket chatPacket)
-								continue;
-
-							foreach (var receiver in server.Connections)
-								receiver.Send(chatPacket);
-						}
-
-						if (!sender.IsConnected)
-							sender.Dispose();
-					}
-
-					Thread.Sleep(15);
-				}
-
-				server.Stop();
+				if (Console.ReadLine() == "quit")
+					this.Dispose();
 			}
+
+			server.Stop();
+			authenticationServer.Stop();
 		}
 
 		public void Dispose()

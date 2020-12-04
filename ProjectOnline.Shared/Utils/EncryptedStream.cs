@@ -1,4 +1,4 @@
-namespace ProjectOnline.Shared.Networking
+namespace ProjectOnline.Shared.Utils
 {
 	using System.IO;
 

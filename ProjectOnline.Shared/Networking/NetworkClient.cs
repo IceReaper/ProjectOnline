@@ -1,7 +1,6 @@
-namespace ProjectOnline.Client.Networking
+namespace ProjectOnline.Shared.Networking
 {
 	using LiteNetLib;
-	using Shared.Networking;
 	using System;
 	using System.Threading;
 

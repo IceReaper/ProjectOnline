@@ -5,22 +5,24 @@ namespace ProjectOnline.Shared.Networking
 	using System.Collections.Generic;
 	using System.IO;
 	using System.IO.Compression;
+	using Utils;
 
 	public class Connection : IDisposable
 	{
 		private readonly NetPeer peer;
-		private readonly Action? onDispose;
 		private readonly List<IPacket> packets = new();
+
+		public readonly List<object> Properties = new();
 
 		public bool IsConnecting => this.peer.ConnectionState == ConnectionState.Outgoing;
 		public bool IsConnected => this.peer.ConnectionState != ConnectionState.Disconnected;
 
-		public Connection(NetPeer peer, Action? onDispose = null)
+		public Connection(NetPeer peer)
 		{
 			this.peer = peer;
-			this.onDispose = onDispose;
 		}
 
+		// TODO i dont like this being public!
 		public void Receive(byte[] data)
 		{
 			var reader = new BinaryReader(
@@ -36,14 +38,15 @@ namespace ProjectOnline.Shared.Networking
 			this.packets.Add(packet);
 		}
 
-		public IEnumerable<IPacket> Receive()
+		public IPacket Receive()
 		{
-			var packets = this.packets.ToArray();
+			if (this.packets.Count == 0)
+				return null;
 
-			foreach (var packet in packets)
-				this.packets.Remove(packet);
+			var packet = this.packets[0];
+			this.packets.Remove(packet);
 
-			return packets;
+			return packet;
 		}
 
 		public void Send(IPacket packet)
@@ -65,7 +68,6 @@ namespace ProjectOnline.Shared.Networking
 		public void Dispose()
 		{
 			this.peer.Disconnect();
-			this.onDispose?.Invoke();
 			GC.SuppressFinalize(this);
 		}
 	}
